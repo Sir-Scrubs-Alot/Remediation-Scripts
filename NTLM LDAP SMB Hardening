@@ -1,0 +1,74 @@
+Import-Module GroupPolicy
+
+$GPOName = "NTLM_LDAP_SMB_Hardening"
+
+# Create GPO
+$gpo = New-GPO -Name $GPOName -Comment "NTLM, LDAP, SMB hardening settings"
+
+# ===== NTLM SETTINGS =====
+
+# RestrictReceivingNTLMTraffic = 2
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Control\Lsa\MSV1_0" `
+  -ValueName "RestrictReceivingNTLMTraffic" `
+  -Type DWord -Value 2
+
+# RestrictSendingNTLMTraffic = 1
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Control\Lsa\MSV1_0" `
+  -ValueName "RestrictSendingNTLMTraffic" `
+  -Type DWord -Value 1
+
+# AuditReceivingNTLMTraffic = 2
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Control\Lsa\MSV1_0" `
+  -ValueName "AuditReceivingNTLMTraffic" `
+  -Type DWord -Value 2
+
+# ===== NETLOGON =====
+
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\Netlogon\Parameters" `
+  -ValueName "RestrictNTLMInDomain" `
+  -Type DWord -Value 1
+
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\Netlogon\Parameters" `
+  -ValueName "AuditNTLMInDomain" `
+  -Type DWord -Value 7
+
+# ===== LDAP (Domain Controllers) =====
+
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\NTDS\Parameters" `
+  -ValueName "LDAPServerIntegrity" `
+  -Type DWord -Value 2
+
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\NTDS\Parameters" `
+  -ValueName "LdapEnforceChannelBinding" `
+  -Type DWord -Value 2
+
+# ===== SMB CLIENT =====
+
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\LanmanWorkstation\Parameters" `
+  -ValueName "RequireSecuritySignature" `
+  -Type DWord -Value 1
+
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\LanmanWorkstation\Parameters" `
+  -ValueName "EnableSecuritySignature" `
+  -Type DWord -Value 1
+
+# ===== SMB SERVER =====
+
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\LanManServer\Parameters" `
+  -ValueName "RequireSecuritySignature" `
+  -Type DWord -Value 1
+
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\LanManServer\Parameters" `
+  -ValueName "EnableSecuritySignature" `
+  -Type DWord -Value 1
