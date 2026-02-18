@@ -1,0 +1,109 @@
+Import-Module GroupPolicy
+
+# Name of rollback GPO
+$GPOName = "NTLM_LDAP_SMB_Rollback"
+
+# Create the GPO
+$gpo = New-GPO -Name $GPOName -Comment "Rollback NTLM, LDAP, SMB hardening settings to defaults"
+
+# =========================================================
+# NTLM SETTINGS (Restore Defaults)
+# =========================================================
+
+# RestrictReceivingNTLMTraffic -> Allow all (0)
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Control\Lsa\MSV1_0" `
+  -ValueName "RestrictReceivingNTLMTraffic" `
+  -Type DWord -Value 0
+
+# RestrictSendingNTLMTraffic -> Allow all (0)
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Control\Lsa\MSV1_0" `
+  -ValueName "RestrictSendingNTLMTraffic" `
+  -Type DWord -Value 0
+
+# AuditReceivingNTLMTraffic -> Disabled (0)
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Control\Lsa\MSV1_0" `
+  -ValueName "AuditReceivingNTLMTraffic" `
+  -Type DWord -Value 0
+
+
+# =========================================================
+# NETLOGON DOMAIN NTLM SETTINGS
+# =========================================================
+
+# RestrictNTLMInDomain -> Disabled (0)
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\Netlogon\Parameters" `
+  -ValueName "RestrictNTLMInDomain" `
+  -Type DWord -Value 0
+
+# AuditNTLMInDomain -> Disabled (0)
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\Netlogon\Parameters" `
+  -ValueName "AuditNTLMInDomain" `
+  -Type DWord -Value 0
+
+
+# =========================================================
+# LDAP SETTINGS (Domain Controllers)
+# =========================================================
+
+# LDAPServerIntegrity -> Negotiate signing (1 default)
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\NTDS\Parameters" `
+  -ValueName "LDAPServerIntegrity" `
+  -Type DWord -Value 1
+
+# LdapEnforceChannelBinding -> Disabled (0 default)
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\NTDS\Parameters" `
+  -ValueName "LdapEnforceChannelBinding" `
+  -Type DWord -Value 0
+
+
+# =========================================================
+# SMB CLIENT SETTINGS
+# =========================================================
+
+# RequireSecuritySignature -> Not required (0 default)
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\LanmanWorkstation\Parameters" `
+  -ValueName "RequireSecuritySignature" `
+  -Type DWord -Value 0
+
+# EnableSecuritySignature -> Enabled if negotiated (1 default)
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\LanmanWorkstation\Parameters" `
+  -ValueName "EnableSecuritySignature" `
+  -Type DWord -Value 1
+
+
+# =========================================================
+# SMB SERVER SETTINGS
+# =========================================================
+
+# RequireSecuritySignature -> Not required (0 default)
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\LanManServer\Parameters" `
+  -ValueName "RequireSecuritySignature" `
+  -Type DWord -Value 0
+
+# EnableSecuritySignature -> Enabled if negotiated (1 default)
+Set-GPRegistryValue -Name $GPOName `
+  -Key "HKLM\System\CurrentControlSet\Services\LanManServer\Parameters" `
+  -ValueName "EnableSecuritySignature" `
+  -Type DWord -Value 1
+
+
+# =========================================================
+# OPTIONAL — LINK TO DOMAIN CONTROLLERS OU
+# =========================================================
+
+# CHANGE THIS TO YOUR DOMAIN DN
+$TargetOU = "OU=Domain Controllers,DC=contoso,DC=com"
+
+New-GPLink -Name $GPOName -Target $TargetOU
+
+Write-Host "Rollback GPO created and linked successfully." -ForegroundColor Green
